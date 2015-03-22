@@ -7,7 +7,8 @@ from snippets.models import Snippet, User, Credit_Card, Driver, Pending_Ride, Us
 from snippets.serializers import SnippetSerializer, UserSerializer, CreditCardSerializer, DriverSerializer, PendingRideSerializer, UserRideSerializer
 import requests
 import json
-import datetime
+from datetime import datetime
+from django.utils import timezone
 
 class JSONResponse(HttpResponse):
     def __init__(self, data, **kwargs):
@@ -272,7 +273,7 @@ def pending_uber_request(request):
         return HttpResponse('Waiting', status=201)
     else:
         ride = User_Ride.objects.get(pending_ride_id = pendingrideid)
-        data = {'driver_id':ride.driver_id.driver_id, 'driver_name':ride.driver_id.name, 'driver_last_name':ride.driver_id.last_name, 'vehicle':ride.driver_id.vehicle, 'license_plate': ride.driver_id.license_plate}
+        data = {'driver_id':ride.driver_id.driver_id, 'driver_name':ride.driver_id.name, 'driver_last_name':ride.driver_id.last_name, 'vehicle':ride.driver_id.vehicle, 'license_plate': ride.driver_id.license_plate, 'rideid':ride.ride_id}
         return JSONResponse(data, status=202)
         
 def ride_list(request):
@@ -288,3 +289,85 @@ def ride_list(request):
             serializer.save()
             return JSONResponse(serializer.data, status=201)
         return JSONResponse(serializer.errors, status=400)
+        
+def begin_ride(request):
+    get = request.GET
+    rideid = get.__getitem__('rideid')
+    lat = float(get.__getitem__('latitude'))
+    lng = float(get.__getitem__('longitude'))
+    ride = User_Ride.objects.get(ride_id = rideid)
+    ride.initial_lat = lat
+    ride.initial_long = lng
+    ride.date = timezone.now()
+    ride.save()
+    return HttpResponse('Ride begun', status= 201)
+    
+def end_ride(request):
+    get = request.GET
+    rideid = get.__getitem__('rideid')
+    lat = float(get.__getitem__('latitude'))
+    lng = float(get.__getitem__('longitude'))
+    distance = float(get.__getitem__('distance'))
+    distance = distance/1000
+    ride = User_Ride.objects.get(ride_id = rideid)
+    ride.final_lat = lat
+    ride.final_long = lng
+    ride.distance = distance
+    
+    initialtime = ride.date
+    finaltime = timezone.now()
+    time = finaltime - initialtime
+    minutes = time.seconds / 60
+    
+    fee = (minutes * 2) + (distance * 3.5) + 7.5
+    ride.fee = fee
+    
+    if fee < 40:
+        fee = 40
+    
+    ride.final_fee = fee
+    ride.date = timezone.now()
+    ride.time = minutes
+    
+    ride.save()
+    return HttpResponse('Ride finished', status= 201)
+    
+def track_ride(request):
+    get = request.GET
+    rideid = get.__getitem__('rideid')
+    ride = User_Ride.objects.get(ride_id = rideid)
+    fee = ride.fee
+    if fee == None:
+        driver = ride.driver_id
+        lat = driver.pos_lat
+        lng = driver.pos_long
+        data = {'latitude':lat, 'longitude':lng}
+        return JSONResponse(data, status = 201)
+    else:
+        initial_lat = ride.initial_lat
+        initial_lng = ride.initial_long
+        final_lat = ride.final_lat
+        final_lng = ride.final_long
+        distance = ride.distance
+        time = ride.time
+        final_fee = ride.final_fee
+        data = {'initial_lat':initial_lat, 'initial_lng':initial_lng, 'final_lat':final_lat, 'final_lng':final_lng, 'distance':distance, 'time':time, 'fee':fee, 'final_fee':final_fee}
+        return JSONResponse(data, status = 202)
+        
+def rating_user_ride(request):
+    get = request.GET
+    rideid = get.__getitem__('rideid')
+    rating = int(get.__getitem__('rating'))
+    ride = User_Ride.objects.get(ride_id = rideid)
+    ride.user_rating = rating
+    ride.save()
+    return HttpResponse('Rating sent', status= 201)
+    
+def rating_driver_ride(request):
+    get = request.GET
+    rideid = get.__getitem__('rideid')
+    rating = int(get.__getitem__('rating'))
+    ride = User_Ride.objects.get(ride_id = rideid)
+    ride.driver_rating = rating
+    ride.save()
+    return HttpResponse('Rating sent', status= 201)

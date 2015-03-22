@@ -40,10 +40,6 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('email', 'name', 'last_name','password','phone','country','home','home_lat','home_long','work','work_lat','work_long')
-        
-'''
-http://127.0.0.1:8000/users/register?email=zhoudic@hotmail.com&name=david&last_name=zhou&password=password&phone=6865555555&country=mexico&home=algo&home_lat=algo&home_long=algo&work=algo&work_lat=algo&work_long=algo
-'''
 
 class CreditCardSerializer(serializers.ModelSerializer):
     class Meta:
@@ -58,9 +54,9 @@ class DriverSerializer(serializers.ModelSerializer):
 class PendingRideSerializer(serializers.ModelSerializer):
     class Meta:
         model = Pending_Ride
-        fields = ('pending_ride_id','user_id','user_lat','user_lon')
+        fields = ('pending_ride_id','user_id','user_lat','user_lon', 'user_destination_lat', 'user_destination_lon')
         
 class UserRideSerializer(serializers.ModelSerializer):
     class Meta:
         model = User_Ride
-        fields = ('ride_id', 'user_id', 'driver_id', 'credit_card_number', 'date', 'initial_pos', 'initial_lat', 'initial_long', 'final_pos', 'final_lat', 'final_long', 'distance', 'time', 'fee', 'user_rating', 'driver_rating', 'pending_ride_id')
+        fields = ('ride_id', 'user_id', 'driver_id', 'credit_card_number', 'date', 'initial_pos', 'initial_lat', 'initial_long', 'final_pos', 'final_lat', 'final_long', 'distance', 'time', 'fee', 'final_fee', 'user_rating', 'driver_rating', 'pending_ride_id')

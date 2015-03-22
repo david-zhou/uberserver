@@ -22,4 +22,9 @@ urlpatterns = [
     url(r'^uber/request/accept', views.accept_uber_request),
     url(r'^uber/request/pending', views.pending_uber_request),
     url(r'^uber/ride/$', views.ride_list),
+    url(r'^uber/ride/begin', views.begin_ride),
+    url(r'^uber/ride/end', views.end_ride),
+    url(r'^uber/ride/track', views.track_ride),
+    url(r'^uber/ride/rating/user', views.rating_user_ride),
+    url(r'^uber/ride/rating/driver', views.rating_driver_ride),
 ]
